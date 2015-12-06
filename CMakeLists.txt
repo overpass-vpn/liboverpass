@@ -17,10 +17,12 @@ include_directories(
 )
 
 set(OVERPASS_HEADERS
+	${PROJECT_SOURCE_DIR}/include/ip_packet.h
 	${PROJECT_SOURCE_DIR}/include/udp_packet.h
 )
 
 set(OVERPASS_SOURCES
+	${PROJECT_SOURCE_DIR}/src/ip_packet.cpp
 	${PROJECT_SOURCE_DIR}/src/udp_packet.cpp
 )
 
