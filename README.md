@@ -96,7 +96,7 @@ have the gmock source elsewhere (or aren't on Ubuntu), build like so:
 
 Run tests and display coverage results with:
 
-    $ make test
+    $ make check
 
 Run tests and display coverage results with:
 

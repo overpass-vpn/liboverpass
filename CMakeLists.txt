@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 2.6)
-project(overpass)
-
-# Version number
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 0)
-set(VERSION_PATCH 0)
+cmake_minimum_required(VERSION 3.5)
+project(overpass
+	VERSION 0.0.0
+	LANGUAGES CXX
+)
 
 configure_file(
 	${PROJECT_SOURCE_DIR}/data/version.h.in
@@ -17,8 +15,13 @@ find_package(Boost REQUIRED COMPONENTS
 	system
 )
 
-# Overpass uses libtins for packet processing.
-find_package(libtins REQUIRED)
+# Overpass uses libtins for packet processing. It may be findable already, but
+# if not, try again using our custom finder.
+find_package(libtins)
+if (NOT libtins_FOUND)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+	find_package(libtins REQUIRED)
+endif()
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
@@ -48,13 +51,23 @@ set(OVERPASS_SOURCES
 
 add_definitions("-std=c++11 -Wall -Wextra")
 
-add_library(overpass SHARED
+add_library(overpass
 	${OVERPASS_HEADERS}
 	${OVERPASS_SOURCES}
 )
 
+target_include_directories(overpass
+	PUBLIC
+		${PROJECT_SOURCE_DIR}/include
+		${PROJECT_BINARY_DIR}/include
+	PRIVATE
+		${Boost_INCLUDE_DIRS}
+		${LIBTINS_INCLUDE_DIRS}
+)
+
 target_link_libraries(overpass
-	${LIBTINS_LIBRARIES}
+	PRIVATE
+		${LIBTINS_LIBRARIES}
 )
 
 add_executable(overpassd
@@ -62,17 +75,19 @@ add_executable(overpassd
 )
 
 target_link_libraries(overpassd
-	overpass
-	${Boost_LIBRARIES}
-	pthread
+	PRIVATE
+		overpass
+		${Boost_LIBRARIES}
+		pthread
 )
 
 install(TARGETS overpass overpassd
 	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
 	RUNTIME DESTINATION bin
 )
 
-set(BUILD_TESTS true CACHE BOOL "Whether or not to build the tests")
+option(BUILD_TESTS "Whether or not to build the tests" ON)
 if(BUILD_TESTS)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0") # Debug, no optimization
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # Enable coverage
