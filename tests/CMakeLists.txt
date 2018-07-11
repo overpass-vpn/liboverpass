@@ -17,10 +17,10 @@ if(LCOV_FOUND)
 		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 
 		# Remove .gcda files from previous testing runs
-		COMMAND ${LCOV} -d . -z -q
+		COMMAND ${LCOV} -b ${PROJECT_SOURCE_DIR} --no-external -d . -z -q
 
 		# Generate initial coverage (so we can get uncovered files)
-		COMMAND ${LCOV} -q -c -i -d . -o ${INITIAL_COVERAGE_FILE}
+		COMMAND ${LCOV} -b ${PROJECT_SOURCE_DIR} --no-external -d . -q -c -i -o ${INITIAL_COVERAGE_FILE}
 	)
 
    add_custom_target(finalize-coverage
@@ -28,11 +28,11 @@ if(LCOV_FOUND)
 		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 
 		# Generate coverage now that tests have run
-		COMMAND ${LCOV} -q -c -d . -o ${TESTED_COVERAGE_FILE}
+		COMMAND ${LCOV} -b ${PROJECT_SOURCE_DIR} --no-external -d . -q -c -o ${TESTED_COVERAGE_FILE}
 
 		# Combine and filter the initial and tested coverage reports
 		COMMAND ${LCOV} -q -a ${INITIAL_COVERAGE_FILE} -a ${TESTED_COVERAGE_FILE} -o total.coverage
-		COMMAND ${LCOV} -q -r total.coverage 'tests/*' '/usr/*' '*libtins*' -o ${FINAL_COVERAGE_FILE}
+		COMMAND ${LCOV} -q -e total.coverage '${PROJECT_SOURCE_DIR}/src/*' '${PROJECT_SOURCE_DIR}/include/*' -o ${FINAL_COVERAGE_FILE}
 
 		DEPENDS run-tests
 	)
@@ -72,7 +72,7 @@ add_custom_target(run-tests
 	DEPENDS initialize-coverage
 )
 
-add_custom_target(test
+add_custom_target(check
 	DEPENDS coverage-html
 )
 

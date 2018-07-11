@@ -85,14 +85,18 @@ void OverpassServerPrivate::handleReadFromVirtual(const SharedBuffer &buffer)
 {
 	// Traffic coming in from the virtual interface. This means some software
 	// running on the host is reaching out to an Overpass client.
-	Tins::IP packet(buffer->data(), buffer->size());
 	try
 	{
+		Tins::IP packet(buffer->data(), buffer->size());
 		m_router->handlePacketFromVirtual(packet);
 	}
 	catch (const UnknownClientException &exception)
 	{
 		std::cerr << exception.what() << std::endl;
+	}
+	catch (const Tins::malformed_packet &exception)
+	{
+		// Not much we can do about a malformed packet other than eat it
 	}
 }
 
@@ -103,6 +107,13 @@ void OverpassServerPrivate::handleReadFromExternal(
 	// Traffic coming in from the external interface contains a nested IP packet
 	// destined for some software running on our host, bound to the virtual
 	// interface.
-	Tins::IP packet(buffer->data(), buffer->size());
-	m_router->handlePacketFromExternal(packet);
+	try
+	{
+		Tins::IP packet(buffer->data(), buffer->size());
+		m_router->handlePacketFromExternal(packet);
+	}
+	catch (const Tins::malformed_packet &exception)
+	{
+		// Not much we can do about a malformed packet other than eat it
+	}
 }
